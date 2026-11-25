@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arion Kurtaj, del primer hackeo a la condena | Línea de tiempo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --pantalla:#1A1F33;
+  --consola:#222843;
+  --pista:#3A4165;
+  --texto:#EEF0F6;
+  --texto-2:#A9AFC5;
+  --cuerpo:#DADDE8;
+  --perfil:#F2C14E;
+  --hackeos:#4CC6EA;
+  --justicia:#B0A2FF;
+  --gta:#FF7398;
+  --f:"Archivo","Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:transparent}
+body{font-family:var(--f);color:var(--texto);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+.vh{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+.lt{background:var(--pantalla);border-radius:14px;overflow:hidden;max-width:820px;margin:0 auto}
+
+/* Cabecera */
+.lt-cab{padding:18px 22px 0}
+.lt-cab h2{margin:0;font-size:17px;font-weight:700;font-stretch:87.5%;line-height:1.25}
+.lt-cab p{margin:3px 0 0;font-size:14px;color:var(--texto-2);line-height:1.4}
+
+/* Pantalla: todas las fichas comparten la misma celda, así el alto no salta */
+.lt-pantalla{display:grid;padding:22px 22px 26px;touch-action:pan-y;min-height:0}
+.lt-evento{grid-area:1/1;visibility:hidden;opacity:0;min-width:0}
+.lt-evento.activo{visibility:visible;opacity:1;animation:entra .3s cubic-bezier(.2,.7,.2,1)}
+@keyframes entra{from{opacity:0;transform:translateX(calc(var(--dir,1) * 16px))}to{opacity:1;transform:none}}
+
+.lt-fecha{margin:0;display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;font-size:15px;font-weight:600;font-stretch:87.5%;color:var(--c);font-variant-numeric:tabular-nums}
+.lt-cat{display:inline-flex;align-items:center;gap:7px;color:var(--texto-2);font-weight:500}
+.lt-cat::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--c)}
+.lt-titulo{margin:8px 0 12px;font-size:clamp(29px,5.6vw,44px);font-weight:700;font-stretch:75%;line-height:1.02;letter-spacing:-.005em;text-wrap:balance}
+.lt-texto{margin:0;max-width:62ch;font-size:17px;line-height:1.5;color:var(--cuerpo)}
+.lt-dato{margin:18px 0 0;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
+.lt-dato b{font-size:clamp(34px,7vw,52px);font-weight:800;font-stretch:75%;line-height:1;color:var(--c);font-variant-numeric:tabular-nums}
+.lt-dato span{max-width:30ch;font-size:15px;line-height:1.35;color:var(--texto-2)}
+.lt-cita{margin:18px 0 0;padding-left:14px;border-left:3px solid var(--c)}
+.lt-cita p{margin:0;font-size:19px;font-weight:500;font-stretch:87.5%;line-height:1.35}
+.lt-cita cite{display:block;margin-top:6px;font-size:14px;font-style:normal;color:var(--texto-2);line-height:1.35}
+
+/* Consola: la barra de capítulos funciona como la de un reproductor de video */
+.lt-consola{background:var(--consola);padding:14px 22px 14px}
+.lt-capitulo{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:6px;font-size:14px;color:var(--texto-2)}
+.lt-capitulo strong{margin-right:8px;font-size:15px;font-weight:600;font-stretch:87.5%;color:var(--texto)}
+.lt-contador{font-variant-numeric:tabular-nums;white-space:nowrap}
+
+.lt-pista{position:relative;height:34px;cursor:pointer;touch-action:none;outline:none;border-radius:6px}
+.lt-pista:focus-visible{box-shadow:0 0 0 2px #fff}
+.lt-segmentos{position:absolute;left:0;right:0;top:14px;height:6px;display:flex;gap:4px;transition:transform .15s}
+.lt-pista:hover .lt-segmentos,.lt-pista.arrastrando .lt-segmentos{transform:scaleY(1.5)}
+.lt-seg{position:relative;height:100%;min-width:0;background:var(--pista);border-radius:3px;overflow:hidden}
+.lt-seg i{position:absolute;left:0;top:0;bottom:0;width:0;background:rgba(238,240,246,.42)}
+.lt-tick{position:absolute;top:17px;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:var(--c);opacity:.45;transition:opacity .2s}
+.lt-tick.pasado{opacity:1}
+.lt-tick.oculto{opacity:.12}
+.lt-cabezal{position:absolute;top:17px;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:var(--c);border:2.5px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,.45);transition:left .25s cubic-bezier(.2,.7,.2,1);pointer-events:none}
+.lt-pista.arrastrando .lt-cabezal{transition:none}
+.lt-tip{position:absolute;bottom:calc(100% + 4px);left:0;z-index:2;width:max-content;max-width:240px;padding:8px 10px;border-radius:8px;background:#F4F5FA;color:#1A1F33;font-size:13px;line-height:1.3;box-shadow:0 4px 14px rgba(0,0,0,.35);pointer-events:none}
+.lt-tip[hidden]{display:none}
+.lt-tip b{display:block;font-weight:600;font-stretch:87.5%}
+
+.lt-controles{display:flex;flex-wrap:wrap;align-items:center;gap:8px 6px;margin-top:8px}
+.lt-btn{appearance:none;border:0;margin:0;background:transparent;color:var(--texto);font:inherit;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;height:40px;min-width:40px;border-radius:20px}
+.lt-btn:hover:not(:disabled){background:rgba(255,255,255,.08)}
+.lt-btn:disabled{color:#5C6386;cursor:default}
+.lt-btn svg{width:20px;height:20px;fill:currentColor}
+.lt-play{gap:8px;padding:0 14px 0 11px;background:rgba(255,255,255,.1);font-size:15px;font-weight:600;font-stretch:87.5%}
+.lt-play:hover{background:rgba(255,255,255,.16)!important}
+.lt-play .ico-pausa,.lt-play[aria-pressed="true"] .ico-play{display:none}
+.lt-play[aria-pressed="true"] .ico-pausa{display:block}
+
+.lt-filtros{margin-left:auto;display:flex;flex-wrap:wrap;gap:6px}
+.lt-chip{appearance:none;margin:0;font:inherit;font-size:14px;line-height:1;color:var(--texto);background:transparent;border:1px solid #4A5276;border-radius:999px;padding:7px 11px 7px 9px;display:inline-flex;align-items:center;gap:7px;cursor:pointer}
+.lt-chip::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--c);box-shadow:inset 0 0 0 1.5px var(--c)}
+.lt-chip:hover{border-color:#6B7399}
+.lt-chip[aria-pressed="false"]{color:var(--texto-2);border-style:dashed}
+.lt-chip[aria-pressed="false"]::before{background:transparent}
+
+.lt-pie{padding:12px 22px 16px;font-size:13px;line-height:1.45;color:var(--texto-2);border-top:1px solid #2D3453;background:var(--consola)}
+
+:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.lt-pista:focus-visible{outline:none}
+
+@media (max-width:560px){
+  .lt-cab,.lt-pantalla,.lt-consola,.lt-pie{padding-left:16px;padding-right:16px}
+  .lt-pantalla{padding-top:18px;padding-bottom:22px}
+  .lt-texto{font-size:16px}
+  .lt-filtros{margin-left:0;width:100%}
+  .lt-capitulo .lt-detalle{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  .lt-evento.activo{animation:none}
+  .lt-cabezal,.lt-segmentos,.lt-tick{transition:none}
+}
+</style>
+</head>
+<body>
+<section class="lt" aria-labelledby="lt-titulo">
+  <header class="lt-cab">
+    <h2 id="lt-titulo">Arion Kurtaj, del primer hackeo a la condena</h2>
+    <p id="lt-ayuda">Arrastra la barra, usa las flechas o presiona “Reproducir” para recorrer el caso.</p>
+  </header>
+
+  <div class="lt-pantalla" id="lt-pantalla"></div>
+
+  <div class="lt-consola">
+    <div class="lt-capitulo">
+      <div><strong id="lt-cap-nombre"></strong><span class="lt-detalle" id="lt-cap-detalle"></span></div>
+      <span class="lt-contador" id="lt-contador"></span>
+    </div>
+    <div class="lt-pista" id="lt-pista" role="slider" tabindex="0" aria-label="Línea de tiempo del caso" aria-describedby="lt-ayuda" aria-valuemin="1">
+      <div class="lt-segmentos" id="lt-segmentos"></div>
+      <div id="lt-ticks"></div>
+      <div class="lt-cabezal" id="lt-cabezal"></div>
+      <div class="lt-tip" id="lt-tip" hidden><b id="lt-tip-fecha"></b><span id="lt-tip-titulo"></span></div>
+    </div>
+    <div class="lt-controles">
+      <button class="lt-btn" id="lt-prev" type="button" aria-label="Hecho anterior" title="Hecho anterior">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h2.2v14H6zM19.5 5v14L9.5 12z"/></svg>
+      </button>
+      <button class="lt-btn lt-play" id="lt-play" type="button" aria-pressed="false">
+        <svg class="ico-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z"/></svg>
+        <svg class="ico-pausa" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 4.5h4v15h-4zM13.5 4.5h4v15h-4z"/></svg>
+        <span id="lt-play-texto">Reproducir</span>
+      </button>
+      <button class="lt-btn" id="lt-next" type="button" aria-label="Hecho siguiente" title="Hecho siguiente">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.8 5H18v14h-2.2zM4.5 5v14l10-7z"/></svg>
+      </button>
+      <div class="lt-filtros" id="lt-filtros" role="group" aria-label="Mostrar temas"></div>
+    </div>
+  </div>
+
+  <footer class="lt-pie">
+    Fuentes: The Wall Street Journal, Bloomberg, BBC, AFP, Fiscalía de la Corona del Reino Unido (CPS), Intel 471, Rockstar Games y Take-Two Interactive.
+  </footer>
+  <p class="vh" id="lt-vivo" aria-live="polite"></p>
+  <noscript><p style="padding:0 22px 18px;color:#EEF0F6">Activa JavaScript para recorrer la línea de tiempo.</p></noscript>
+</section>
+
+<script>
+(function(){
+  "use strict";
+
+  var CAPITULOS = [
+    {id:"inicios",    nombre:"Los inicios",          detalle:"2005 a 2021"},
+    {id:"lapsus",     nombre:"Lapsus$",              detalle:"2021 y 2022"},
+    {id:"septiembre", nombre:"Septiembre de 2022",   detalle:"El hotel y la filtración"},
+    {id:"juicio",     nombre:"Juicio e internación", detalle:"2023 a 2025"},
+    {id:"desenlace",  nombre:"El desenlace",         detalle:"2026"}
+  ];
+
+  var TEMAS = {
+    perfil:   {nombre:"Su vida",            color:"--perfil"},
+    hackeos:  {nombre:"Hackeos",            color:"--hackeos"},
+    justicia: {nombre:"Policía y justicia", color:"--justicia"},
+    gta:      {nombre:"GTA VI",             color:"--gta"}
+  };
+
+  var EVENTOS = [
+    {id:"nacimiento", cap:"inicios", tema:"perfil", fecha:"2005",
+     titulo:"Nace en Oxford",
+     texto:"Arion Kurtaj crece en un barrio de clase media al norte de Oxford, en Inglaterra. Es autista. Sus padres se separan y su madre pelea durante años para conseguirle escolaridad y apoyos.",
+     dato:["17 años","tenía cuando filtró los videos de GTA VI"]},
+    {id:"minecraft", cap:"inicios", tema:"hackeos", fecha:"2016",
+     titulo:"Primer rastro en un foro criminal",
+     texto:"A los 11 años, según la firma Flashpoint, pregunta en un mercado criminal cómo hackear un servidor de Minecraft. Es el registro más antiguo que se conoce de su actividad."},
+    {id:"herramientas", cap:"inicios", tema:"hackeos", fecha:"2020",
+     titulo:"Compra herramientas de ataque",
+     texto:"Con 15 años ofrece dinero por herramientas de hacking, de acuerdo con Chainalysis, la firma que rastrea pagos en criptomonedas.",
+     dato:["US$10.000","ofreció como mínimo por herramientas de hacking"]},
+    {id:"electronic-arts", cap:"inicios", tema:"hackeos", fecha:"Comienzos de 2021",
+     titulo:"Deja el colegio y ataca a Electronic Arts",
+     texto:"Con 16 años, su madre lo saca de la tutela del Estado y nunca vuelve a clases. Un mes después integra el grupo que roba datos a Electronic Arts. En una semana, investigadores lo identifican y su nombre llega al FBI.",
+     dato:["780 GB","robados a Electronic Arts"]},
+
+    {id:"lapsus", cap:"lapsus", tema:"hackeos", fecha:"Mediados de 2021",
+     titulo:"Nace Lapsus$",
+     texto:"Junto a un hacker británico con el alias ASyntax y varios hackers brasileños forma Lapsus$, un grupo de extorsión que se apoya en la ingeniería social: engaños a mesas de ayuda, credenciales robadas a contratistas y SIM swapping. A fines de 2021, el grupo borra la base de datos de vacunas contra el Covid del Ministerio de Salud de Brasil."},
+    {id:"bt-ee", cap:"lapsus", tema:"hackeos", fecha:"Agosto a noviembre de 2021",
+     titulo:"SIM swapping contra BT y EE",
+     texto:"Hackea los servidores de la telefónica BT y de su filial EE, lo que deriva en un alza de cambios de SIM no autorizados. Con esa técnica, los atacantes se apropian del número de la víctima para recibir sus códigos de verificación y entrar a sus cuentas.",
+     dato:["52 peniques","quedaron en la cuenta de Coinbase de una víctima que tenía unas 34.000 libras"]},
+    {id:"doxbin", cap:"lapsus", tema:"perfil", fecha:"Noviembre de 2021",
+     titulo:"Compra Doxbin",
+     texto:"Se queda con Doxbin, un sitio donde los usuarios publican datos personales de sus rivales para intimidarlos. Meses después, los antiguos dueños lo acusan de mala administración y lo presionan para revenderlo.",
+     dato:["US$75.000","pagó por el sitio, según Chainalysis"]},
+    {id:"doxeo", cap:"lapsus", tema:"perfil", fecha:"Enero de 2022",
+     titulo:"Filtra Doxbin y lo doxean",
+     texto:"Publica la base de datos completa del sitio, con usuarios, contraseñas y correos. La respuesta llega con sus propios datos: los dueños de Doxbin difunden su dirección, fotos e información de su familia. Alguien lanza piedras contra las ventanas de su casa y destroza el auto de su madre.",
+     cita:["Una mina de oro","Allison Nixon, de la firma Unit 221B, sobre la base de datos filtrada"]},
+    {id:"primera-detencion", cap:"lapsus", tema:"justicia", fecha:"Enero de 2022",
+     titulo:"Primera detención",
+     texto:"La policía lo arresta junto a ASyntax por el hackeo a BT. Ambos quedan en libertad mientras sigue la investigación: en el Reino Unido no es habitual encarcelar de forma preventiva a adolescentes."},
+    {id:"gta-confirmado", cap:"lapsus", tema:"gta", fecha:"4 de febrero de 2022",
+     titulo:"Rockstar confirma el próximo GTA",
+     texto:"Rockstar anuncia que el desarrollo de la siguiente entrega de Grand Theft Auto está “muy avanzado”. No muestra imágenes ni revela el nombre del juego."},
+    {id:"nvidia", cap:"lapsus", tema:"hackeos", fecha:"Febrero de 2022",
+     titulo:"Golpe a Nvidia",
+     texto:"Con credenciales de contratistas, Lapsus$ entra a Nvidia, publica 80 GB de lo robado y exige un rescate. Según Bloomberg, el gobierno de Estados Unidos temió al comienzo que el ataque viniera de Rusia. Después, el grupo se atribuye ataques a Microsoft, Samsung y Okta.",
+     dato:["1 TB","de información robada a Nvidia"]},
+    {id:"segunda-detencion", cap:"lapsus", tema:"justicia", fecha:"Marzo de 2022",
+     titulo:"Segunda detención",
+     texto:"Vuelve a ser detenido. Los servicios sociales no encuentran un lugar adecuado para alojarlo y sale libre con una condición: mantenerse lejos de los computadores."},
+
+    {id:"travelodge", cap:"septiembre", tema:"justicia", fecha:"Septiembre de 2022",
+     titulo:"Habitación M15",
+     texto:"Tras el doxeo, la policía lo instala por su seguridad en la habitación M15 de un Travelodge en Bicester, a las afueras de Oxford. Su madre se queda en otro piso y acuerdan una contraseña para abrir la puerta. Tiene 17 años y está en libertad bajo fianza."},
+    {id:"uber-revolut", cap:"septiembre", tema:"hackeos", fecha:"Mediados de septiembre de 2022",
+     titulo:"Uber y Revolut",
+     texto:"Desde el hotel ataca a Uber: publica una imagen obscena en el Slack de los empleados, roba datos y borra cuentas internas. En Revolut intenta acceder a 74.000 registros de clientes.",
+     dato:["US$2,8 millones","le costó como mínimo el ataque a Uber"]},
+    {id:"rockstar", cap:"septiembre", tema:"hackeos", fecha:"16 de septiembre de 2022",
+     titulo:"Entra a Rockstar",
+     texto:"Se hace pasar por un empleado que “perdió” su contraseña. Con la cuenta de un contratista, y luego con las credenciales de un exempleado, llega a los sistemas de desarrollo del juego. Al día siguiente descarga videos, documentos de diseño y código fuente. No tiene computador: usa un Fire TV Stick conectado al televisor del hotel, un teclado, un mouse y un celular."},
+    {id:"filtracion", cap:"septiembre", tema:"gta", fecha:"17 al 19 de septiembre de 2022",
+     titulo:"La filtración",
+     texto:"Con el usuario TeaPotUberHacker publica en GTAForums 90 videos de GTA VI, cerca de una hora de material, cuando Rockstar ni siquiera había presentado el juego. Muestran que tendrá por primera vez una protagonista femenina. Amenaza con liberar el código fuente si no lo contactan en 24 horas. El 19, Rockstar le corta el acceso y avisa al FBI.",
+     cita:["No soy un empleado de Rockstar, soy un atacante","Mensaje de Kurtaj en el Slack interno de Rockstar"]},
+    {id:"detencion-hotel", cap:"septiembre", tema:"justicia", fecha:"22 de septiembre de 2022",
+     titulo:"Detenido en la M15",
+     texto:"Cerca de las 21:00, agentes de la Policía de la Ciudad de Londres entran a la habitación. Encuentran el Fire TV Stick enchufado al televisor, el teclado, el mouse y un iPhone semioculto bajo las sábanas. Lo acusan de hackeo, fraude y extorsión."},
+
+    {id:"veredicto", cap:"juicio", tema:"justicia", fecha:"Agosto de 2023",
+     titulo:"El jurado: cometió los hechos",
+     texto:"Los psiquiatras lo consideran no apto para ser juzgado por la severidad de su autismo, así que el jurado del Tribunal de la Corona de Southwark no se pronuncia sobre su intención delictiva. Tras siete semanas de juicio, determina que cometió los hechos.",
+     dato:["12","delitos que el jurado le atribuyó"]},
+    {id:"trailer", cap:"juicio", tema:"gta", fecha:"Diciembre de 2023",
+     titulo:"El primer tráiler oficial",
+     texto:"Rockstar publica el primer tráiler de Grand Theft Auto VI, más de un año después de la filtración. Ahí presenta a Lucia, la protagonista que los videos robados habían adelantado."},
+    {id:"hospital", cap:"juicio", tema:"justicia", fecha:"Diciembre de 2023",
+     titulo:"Internación indefinida",
+     texto:"Un juez ordena su internación en un hospital psiquiátrico de seguridad hasta que los médicos determinen que ya no es un peligro. En la audiencia se informa de decenas de reportes de lesiones o daños durante su custodia.",
+     cita:["Seguía expresando la intención de volver al cibercrimen lo antes posible","Evaluación de salud mental citada en la audiencia, según la BBC"]},
+    {id:"apto", cap:"juicio", tema:"justicia", fecha:"2025",
+     titulo:"Apto para ser juzgado",
+     texto:"Una nueva evaluación lo declara apto para enfrentar un proceso penal y la fiscalía reactiva la causa. Tras unos dos años en el hospital, según sus abogados, pasa a una cárcel común a la espera de un nuevo juicio."},
+
+    {id:"celular", cap:"desenlace", tema:"justicia", fecha:"Marzo de 2026",
+     titulo:"Un celular en la cárcel",
+     texto:"En prisión tiene un celular con el que envía un mensaje burlesco al 999, el número de emergencias británico. Es uno de los cargos que admitirá meses después."},
+    {id:"jubair", cap:"desenlace", tema:"justicia", fecha:"16 de julio de 2026",
+     titulo:"Cae su antiguo socio",
+     texto:"Thalha Jubair, el otro adolescente juzgado por Lapsus$ en 2023 y que según Intel 471 operaba como ASyntax, es condenado a cinco años y seis meses por el ciberataque de 2024 contra Transport for London, atribuido a Scattered Spider. Lo sentencia el juez Mark Turner."},
+    {id:"culpable", cap:"desenlace", tema:"justicia", fecha:"16 de noviembre de 2026",
+     titulo:"Se declara culpable",
+     texto:"Ante el Tribunal de la Corona de Woolwich admite seis cargos, entre ellos fraude, acceso no autorizado a material informático y tener un celular en prisión. Faltan tres días para el lanzamiento de GTA VI.",
+     cita:["Usó técnicas de hackeo sofisticadas para llevar a cabo una campaña sostenida de ciberataques","Robert Hutchinson, fiscal de la Fiscalía de la Corona"]},
+    {id:"lanzamiento", cap:"desenlace", tema:"gta", fecha:"19 de noviembre de 2026",
+     titulo:"Sale GTA VI",
+     texto:"Rockstar lanza Grand Theft Auto VI para PlayStation 5 y Xbox Series X|S, 13 años después de GTA V. Antes del estreno ya había vendido 32,5 millones de unidades, según Take-Two.",
+     dato:["US$3.790 millones","en ventas el primer día, según Take-Two"]},
+    {id:"condena", cap:"desenlace", tema:"justicia", fecha:"23 de noviembre de 2026",
+     titulo:"Siete años y libre el mismo día",
+     texto:"El juez Mark Turner lo condena a siete años de prisión. Como ya había pasado años bajo custodia, sale libre ese día en libertad condicional. Según la BBC, una orden de prevención de delitos graves le prohíbe usar Telegram y Discord durante cinco años.",
+     cita:["No desperdicies ese talento pasando el resto de tu vida entrando y saliendo de la cárcel","Juez Mark Turner, según AFP"]}
+  ];
+
+  var DURACION = 6500;
+  var reduceMov = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function $(id){ return document.getElementById(id); }
+  function el(tag, clase, texto){
+    var n = document.createElement(tag);
+    if (clase) n.className = clase;
+    if (texto != null) n.textContent = texto;
+    return n;
+  }
+  function colorDe(tema){ return "var(" + TEMAS[tema].color + ")"; }
+
+  var pantalla = $("lt-pantalla"), segmentos = $("lt-segmentos"), ticks = $("lt-ticks"),
+      pista = $("lt-pista"), cabezal = $("lt-cabezal"), tip = $("lt-tip"),
+      tipFecha = $("lt-tip-fecha"), tipTitulo = $("lt-tip-titulo"),
+      capNombre = $("lt-cap-nombre"), capDetalle = $("lt-cap-detalle"), contador = $("lt-contador"),
+      btnPrev = $("lt-prev"), btnNext = $("lt-next"), btnPlay = $("lt-play"), playTexto = $("lt-play-texto"),
+      filtros = $("lt-filtros"), vivo = $("lt-vivo");
+
+  /* Índices por capítulo */
+  var porCap = CAPITULOS.map(function(c){ return EVENTOS.filter(function(e){ return e.cap === c.id; }); });
+  EVENTOS.forEach(function(e, i){
+    e.i = i;
+    e.k = CAPITULOS.findIndex(function(c){ return c.id === e.cap; });
+    e.j = porCap[e.k].indexOf(e);
+    e.n = porCap[e.k].length;
+  });
+
+  /* Fichas */
+  EVENTOS.forEach(function(e){
+    var art = el("article", "lt-evento");
+    art.style.setProperty("--c", colorDe(e.tema));
+    art.setAttribute("aria-hidden", "true");
+    var fecha = el("p", "lt-fecha");
+    fecha.appendChild(el("span", null, e.fecha));
+    fecha.appendChild(el("span", "lt-cat", TEMAS[e.tema].nombre));
+    art.appendChild(fecha);
+    art.appendChild(el("h3", "lt-titulo", e.titulo));
+    art.appendChild(el("p", "lt-texto", e.texto));
+    if (e.dato){
+      var d = el("p", "lt-dato");
+      d.appendChild(el("b", null, e.dato[0]));
+      d.appendChild(el("span", null, e.dato[1]));
+      art.appendChild(d);
+    }
+    if (e.cita){
+      var q = el("blockquote", "lt-cita");
+      q.appendChild(el("p", null, "“" + e.cita[0] + "”"));
+      q.appendChild(el("cite", null, e.cita[1]));
+      art.appendChild(q);
+    }
+    pantalla.appendChild(art);
+    e.ficha = art;
+  });
+
+  /* Barra de capítulos */
+  CAPITULOS.forEach(function(c, k){
+    var s = el("div", "lt-seg");
+    s.style.flexGrow = porCap[k].length;
+    var relleno = el("i");
+    s.appendChild(relleno);
+    segmentos.appendChild(s);
+    c.seg = s; c.relleno = relleno;
+  });
+  EVENTOS.forEach(function(e){
+    var t = el("span", "lt-tick");
+    t.style.setProperty("--c", colorDe(e.tema));
+    ticks.appendChild(t);
+    e.tick = t;
+  });
+
+  /* Estado */
+  var params = new URLSearchParams(location.search);
+  var activos = {};
+  var temasParam = (params.get("temas") || "").split(",").filter(function(t){ return TEMAS[t]; });
+  Object.keys(TEMAS).forEach(function(t){ activos[t] = temasParam.length ? temasParam.indexOf(t) >= 0 : true; });
+
+  function visibles(){
+    return EVENTOS.filter(function(e){ return activos[e.tema]; }).map(function(e){ return e.i; });
+  }
+
+  var actual = 0;
+  var pedido = params.get("evento");
+  if (pedido){
+    var num = parseInt(pedido, 10);
+    var porId = EVENTOS.findIndex(function(e){ return e.id === pedido; });
+    if (porId >= 0) actual = porId;
+    else if (!isNaN(num) && num >= 1 && num <= EVENTOS.length) actual = num - 1;
+  }
+  if (!activos[EVENTOS[actual].tema]) actual = visibles()[0];
+
+  var X = [];
+  var reproduciendo = false, temporizador = null;
+
+  function medir(){
+    X = EVENTOS.map(function(e){
+      var s = CAPITULOS[e.k].seg;
+      return s.offsetLeft + s.offsetWidth * (e.j + 0.5) / e.n;
+    });
+    EVENTOS.forEach(function(e, i){ e.tick.style.left = X[i] + "px"; });
+    pintar();
+  }
+
+  function pintar(){
+    var e = EVENTOS[actual];
+    cabezal.style.left = (X[actual] || 0) + "px";
+    cabezal.style.setProperty("--c", colorDe(e.tema));
+    CAPITULOS.forEach(function(c, k){
+      c.relleno.style.transition = "none";
+      c.relleno.style.width = k < e.k ? "100%" : k > e.k ? "0%" : ((e.j + 0.5) / e.n * 100) + "%";
+    });
+    EVENTOS.forEach(function(x, i){
+      x.tick.classList.toggle("pasado", i <= actual);
+      x.tick.classList.toggle("oculto", !activos[x.tema]);
+    });
+  }
+
+  function estado(){
+    var e = EVENTOS[actual], vis = visibles(), pos = vis.indexOf(actual);
+    capNombre.textContent = CAPITULOS[e.k].nombre;
+    capDetalle.textContent = CAPITULOS[e.k].detalle;
+    contador.textContent = (pos + 1) + " de " + vis.length;
+    pista.setAttribute("aria-valuemax", vis.length);
+    pista.setAttribute("aria-valuenow", pos + 1);
+    pista.setAttribute("aria-valuetext", e.fecha + ": " + e.titulo);
+    btnPrev.disabled = pos <= 0;
+    btnNext.disabled = pos >= vis.length - 1;
+    pintar();
+  }
+
+  function ir(i, opciones){
+    opciones = opciones || {};
+    if (i == null || i === actual && !opciones.inicio) return;
+    var anterior = EVENTOS[actual];
+    var dir = i > actual ? 1 : -1;
+    anterior.ficha.classList.remove("activo");
+    anterior.ficha.setAttribute("aria-hidden", "true");
+    actual = i;
+    var e = EVENTOS[i];
+    e.ficha.style.setProperty("--dir", opciones.inicio ? 0 : dir);
+    e.ficha.classList.add("activo");
+    e.ficha.removeAttribute("aria-hidden");
+    estado();
+    if (opciones.anunciar) vivo.textContent = e.fecha + ". " + e.titulo;
+    if (reproduciendo) programar();
+  }
+
+  function paso(d){
+    var vis = visibles(), pos = vis.indexOf(actual);
+    ir(vis[pos + d], {anunciar:true});
+  }
+
+  /* Reproducción */
+  function programar(){
+    clearTimeout(temporizador);
+    var vis = visibles(), pos = vis.indexOf(actual);
+    if (pos >= vis.length - 1){ parar(); return; }
+    var e = EVENTOS[actual], sig = EVENTOS[vis[pos + 1]], c = CAPITULOS[e.k];
+    if (!reduceMov){
+      var meta = sig.k === e.k ? (sig.j + 0.5) / sig.n * 100 : 100;
+      void c.relleno.offsetWidth;
+      c.relleno.style.transition = "width " + DURACION + "ms linear";
+      c.relleno.style.width = meta + "%";
+    }
+    temporizador = setTimeout(function(){ ir(vis[pos + 1]); }, DURACION);
+  }
+  function reproducir(){
+    reproduciendo = true;
+    btnPlay.setAttribute("aria-pressed", "true");
+    playTexto.textContent = "Pausar";
+    var vis = visibles();
+    if (actual === vis[vis.length - 1]) ir(vis[0]);
+    programar();
+  }
+  function parar(){
+    if (!reproduciendo) return;
+    reproduciendo = false;
+    clearTimeout(temporizador);
+    btnPlay.setAttribute("aria-pressed", "false");
+    playTexto.textContent = "Reproducir";
+    pintar();
+  }
+
+  btnPlay.addEventListener("click", function(){ reproduciendo ? parar() : reproducir(); });
+  btnPrev.addEventListener("click", function(){ parar(); paso(-1); });
+  btnNext.addEventListener("click", function(){ parar(); paso(1); });
+
+  /* Teclado */
+  function saltoCapitulo(d){
+    var vis = visibles(), k = EVENTOS[actual].k + d;
+    for (; k >= 0 && k < CAPITULOS.length; k += d){
+      for (var p = 0; p < vis.length; p++){ if (EVENTOS[vis[p]].k === k) return vis[p]; }
+    }
+    return null;
+  }
+  pista.addEventListener("keydown", function(ev){
+    var vis = visibles(), pos = vis.indexOf(actual), n;
+    switch (ev.key){
+      case "ArrowRight": case "ArrowUp": n = vis[pos + 1]; break;
+      case "ArrowLeft": case "ArrowDown": n = vis[pos - 1]; break;
+      case "Home": n = vis[0]; break;
+      case "End": n = vis[vis.length - 1]; break;
+      case "PageDown": n = saltoCapitulo(1); break;
+      case "PageUp": n = saltoCapitulo(-1); break;
+      default: return;
+    }
+    ev.preventDefault();
+    parar();
+    ir(n);
+  });
+  document.addEventListener("keydown", function(ev){
+    if (ev.target !== document.body) return;
+    if (ev.key === "ArrowRight"){ parar(); paso(1); }
+    if (ev.key === "ArrowLeft"){ parar(); paso(-1); }
+  });
+
+  /* Arrastre sobre la barra */
+  function xDe(ev){ return ev.clientX - pista.getBoundingClientRect().left; }
+  function cercano(x){
+    var mejor = null, dist = Infinity;
+    visibles().forEach(function(i){ var d = Math.abs(X[i] - x); if (d < dist){ dist = d; mejor = i; } });
+    return mejor;
+  }
+  function mostrarTip(i){
+    var e = EVENTOS[i];
+    tipFecha.textContent = e.fecha;
+    tipTitulo.textContent = e.titulo;
+    tip.hidden = false;
+    var w = tip.offsetWidth, W = pista.offsetWidth;
+    tip.style.left = Math.max(0, Math.min(W - w, X[i] - w / 2)) + "px";
+  }
+  var arrastrando = false;
+  pista.addEventListener("pointerdown", function(ev){
+    arrastrando = true;
+    pista.classList.add("arrastrando");
+    try { pista.setPointerCapture(ev.pointerId); } catch(err){}
+    parar();
+    var i = cercano(xDe(ev));
+    mostrarTip(i);
+    ir(i);
+  });
+  pista.addEventListener("pointermove", function(ev){
+    var i = cercano(xDe(ev));
+    if (arrastrando){ mostrarTip(i); ir(i); }
+    else if (ev.pointerType === "mouse"){ mostrarTip(i); }
+  });
+  function soltar(ev){
+    arrastrando = false;
+    pista.classList.remove("arrastrando");
+    if (!ev || ev.pointerType !== "mouse") tip.hidden = true;
+  }
+  pista.addEventListener("pointerup", soltar);
+  pista.addEventListener("pointercancel", soltar);
+  pista.addEventListener("pointerleave", function(){ if (!arrastrando) tip.hidden = true; });
+
+  /* Deslizar sobre la ficha en pantallas táctiles */
+  var sx = null, sy = null;
+  pantalla.addEventListener("pointerdown", function(ev){
+    if (ev.pointerType === "mouse") return;
+    sx = ev.clientX; sy = ev.clientY;
+  });
+  pantalla.addEventListener("pointerup", function(ev){
+    if (sx == null) return;
+    var dx = ev.clientX - sx, dy = ev.clientY - sy;
+    sx = null;
+    if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.3){ parar(); paso(dx < 0 ? 1 : -1); }
+  });
+  pantalla.addEventListener("pointercancel", function(){ sx = null; });
+
+  /* Filtros por tema */
+  Object.keys(TEMAS).forEach(function(t){
+    var b = el("button", "lt-chip", TEMAS[t].nombre);
+    b.type = "button";
+    b.style.setProperty("--c", colorDe(t));
+    b.setAttribute("aria-pressed", activos[t] ? "true" : "false");
+    b.addEventListener("click", function(){
+      var encendidos = Object.keys(activos).filter(function(x){ return activos[x]; });
+      if (activos[t] && encendidos.length === 1) return;
+      activos[t] = !activos[t];
+      b.setAttribute("aria-pressed", activos[t] ? "true" : "false");
+      if (!activos[EVENTOS[actual].tema]){
+        var vis = visibles();
+        var sig = vis.filter(function(i){ return i > actual; })[0];
+        parar();
+        ir(sig != null ? sig : vis[vis.length - 1]);
+      } else {
+        estado();
+        if (reproduciendo) programar();
+      }
+    });
+    filtros.appendChild(b);
+  });
+
+  /* Alto automático para el iframe */
+  function avisarAltura(){
+    try {
+      window.parent.postMessage({type:"lt-embed-height", height:Math.ceil(document.documentElement.getBoundingClientRect().height)}, "*");
+    } catch(err){}
+  }
+
+  ir(actual, {inicio:true});
+  medir();
+  if ("ResizeObserver" in window){
+    new ResizeObserver(medir).observe(pista);
+    new ResizeObserver(avisarAltura).observe(document.body);
+  } else {
+    window.addEventListener("resize", function(){ medir(); avisarAltura(); });
+  }
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ medir(); avisarAltura(); });
+  window.addEventListener("load", avisarAltura);
+  avisarAltura();
+})();
+</script>
+</body>
+</html>
