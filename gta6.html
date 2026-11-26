@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GTA VI: cronología de un fenómeno</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
+<style>
+  @property --sky-top { syntax: '<color>'; inherits: true; initial-value: #0b0a24; }
+  @property --sky-mid { syntax: '<color>'; inherits: true; initial-value: #1b1650; }
+  @property --sky-low { syntax: '<color>'; inherits: true; initial-value: #2e2368; }
+
+  :root {
+    --water: #100b26;
+    --water-deep: #0a0719;
+    --ivory: #fff4e8;
+    --muted: rgba(255, 244, 232, .70);
+    --faint: rgba(255, 244, 232, .42);
+    --horizon: 158px;
+    --sun-y: 46px;
+    --c-estudio: #8fd3ff;
+    --c-filtraciones: #ff6474;
+    --c-marketing: #ff9ad5;
+    --c-fechas: #ffc857;
+    --c-negocio: #7fe3a5;
+    --c-estreno: #c9b6ff;
+    --cat: var(--c-estudio);
+    --ff: "Archivo", "Roboto", "Helvetica Neue", Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; background: var(--water-deep); }
+  body {
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--ff); color: var(--ivory);
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+
+  .player {
+    position: relative;
+    width: 350px; height: 450px;
+    overflow: hidden;
+    background: linear-gradient(180deg, var(--water) 0%, var(--water-deep) 100%);
+    isolation: isolate;
+  }
+
+  /* Cielo: cambia de noche a amanecer a medida que avanza la cronología */
+  .sky {
+    position: absolute; inset: 0 0 auto 0; height: var(--horizon);
+    background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 58%, var(--sky-low) 100%);
+    transition: --sky-top .7s ease, --sky-mid .7s ease, --sky-low .7s ease;
+    z-index: -2;
+  }
+  .sun {
+    position: absolute; right: 38px; top: calc(var(--horizon) - 34px);
+    width: 68px; height: 68px; border-radius: 50%;
+    background: radial-gradient(circle at 50% 45%, #fff1c9 0%, #ffd07a 45%, #ff9a52 100%);
+    box-shadow: 0 0 40px 10px rgba(255, 160, 90, .35);
+    transform: translateY(var(--sun-y));
+    transition: transform .7s ease, opacity .7s ease;
+    z-index: -1;
+  }
+  .water {
+    position: absolute; inset: var(--horizon) 0 0 0;
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--sky-low) 38%, var(--water)) 0px, var(--water) 22px, var(--water-deep) 100%);
+    transition: --sky-low .7s ease;
+    z-index: -1;
+  }
+  .water::before {
+    content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1px;
+    background: color-mix(in srgb, var(--sky-low) 80%, white);
+    opacity: .7;
+  }
+
+  header {
+    position: absolute; top: 0; left: 0; right: 0;
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+    padding: 14px 16px 0;
+  }
+  h1 {
+    font-weight: 800; font-stretch: 78%;
+    font-size: 21px; line-height: 1.08; letter-spacing: -.005em;
+    max-width: 220px;
+    text-wrap: balance;
+  }
+  .btn {
+    font: inherit; color: inherit; cursor: pointer;
+    background: rgba(10, 7, 25, .38);
+    border: 1px solid rgba(255, 244, 232, .28);
+    border-radius: 999px;
+    transition: background .2s, border-color .2s;
+  }
+  .btn:hover { background: rgba(10, 7, 25, .6); border-color: rgba(255, 244, 232, .5); }
+  .btn:focus-visible, .track:focus-visible { outline: 2px solid var(--ivory); outline-offset: 2px; }
+  .index-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 11px 6px 9px; font-size: 12.5px; font-weight: 600;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .index-btn svg { width: 13px; height: 13px; }
+
+  /* Año: la cifra grande se apoya en el horizonte */
+  .year {
+    position: absolute; left: 12px; top: calc(var(--horizon) - 62px);
+    font-weight: 900; font-stretch: 62%;
+    font-size: 82px; line-height: 1; letter-spacing: -.02em;
+    color: var(--ivory);
+    text-shadow: 0 2px 18px rgba(10, 7, 25, .35);
+    pointer-events: none;
+    font-variant-numeric: lining-nums;
+  }
+
+  .card {
+    position: absolute; left: 0; right: 0; top: 184px; bottom: 66px;
+    padding: 0 16px;
+    display: flex; flex-direction: column;
+    touch-action: pan-y;
+    user-select: none; -webkit-user-select: none;
+  }
+  .meta {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 12px; color: var(--muted); margin-bottom: 7px;
+  }
+  .cat {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--cat); font-weight: 650;
+  }
+  .cat::before {
+    content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--cat);
+  }
+  .meta .when { font-variant-numeric: tabular-nums; }
+  .title {
+    font-weight: 800; font-stretch: 88%;
+    font-size: 18.5px; line-height: 1.15; letter-spacing: -.005em;
+    margin-bottom: 7px;
+    text-wrap: balance;
+  }
+  .body {
+    font-size: 13.2px; line-height: 1.45; color: rgba(255, 244, 232, .9);
+    font-stretch: 92%;
+    overflow-y: auto; flex: 1 1 auto; min-height: 0;
+    scrollbar-width: thin; scrollbar-color: rgba(255,244,232,.3) transparent;
+    padding-right: 2px;
+  }
+  .foot {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
+    margin-top: 6px; flex-shrink: 0;
+  }
+  .source { font-size: 11px; color: var(--faint); }
+  .counter { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  /* Navegación inferior */
+  .nav {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 66px;
+    display: flex; align-items: center; gap: 8px;
+    padding: 0 10px 6px;
+    border-top: 1px solid rgba(255, 244, 232, .1);
+    background: rgba(10, 7, 25, .55);
+  }
+  .arrow {
+    width: 34px; height: 34px; flex-shrink: 0;
+    display: grid; place-items: center;
+  }
+  .arrow svg { width: 15px; height: 15px; }
+  .arrow:disabled { opacity: .3; cursor: default; }
+  .arrow:disabled:hover { background: rgba(10, 7, 25, .38); border-color: rgba(255, 244, 232, .28); }
+
+  .scrub { flex: 1; position: relative; height: 50px; }
+  .track {
+    position: absolute; left: 0; right: 0; top: 6px; height: 28px;
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer; touch-action: none; border-radius: 4px;
+  }
+  .tick {
+    flex: 1; height: 100%; display: flex; align-items: center; justify-content: center;
+  }
+  .tick i {
+    display: block; width: 3px; height: 13px; border-radius: 2px;
+    background: var(--tc); opacity: .9;
+    transition: height .2s ease, width .2s ease, opacity .2s ease, background .2s;
+  }
+  .tick.future i { opacity: .38; }
+  .tick.on i { width: 5px; height: 26px; opacity: 1; background: var(--ivory); box-shadow: 0 0 0 2px var(--tc); }
+  .years {
+    position: absolute; left: 0; right: 0; top: 36px; height: 12px;
+    font-size: 10px; color: var(--faint); font-variant-numeric: tabular-nums;
+  }
+  .years span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+
+  /* Índice */
+  .index {
+    position: absolute; left: 0; right: 0; top: 64px; bottom: 0;
+    background: var(--water-deep);
+    border-top: 1px solid rgba(255, 244, 232, .14);
+    display: flex; flex-direction: column;
+    opacity: 0; visibility: hidden; transform: translateY(8px);
+    transition: opacity .22s ease, transform .22s ease, visibility 0s linear .22s;
+    z-index: 5;
+  }
+  .index.open { opacity: 1; visibility: visible; transform: none; transition: opacity .22s ease, transform .22s ease; }
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 4px 12px;
+    padding: 10px 16px 9px; font-size: 11px; color: var(--muted);
+    border-bottom: 1px solid rgba(255, 244, 232, .1);
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .legend span::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--lc); }
+  .index ol { list-style: none; overflow-y: auto; flex: 1; padding: 4px 0 10px; scrollbar-width: thin; scrollbar-color: rgba(255,244,232,.3) transparent; }
+  .index li button {
+    width: 100%; text-align: left; font: inherit; color: inherit; background: none; border: 0; cursor: pointer;
+    display: grid; grid-template-columns: 38px 1fr; gap: 0 10px; align-items: baseline;
+    padding: 7px 16px 7px 13px;
+    border-left: 3px solid transparent;
+  }
+  .index li button:hover { background: rgba(255, 244, 232, .06); }
+  .index li button:focus-visible { outline: 2px solid var(--ivory); outline-offset: -2px; }
+  .index li button[aria-current="true"] { border-left-color: var(--ic); background: rgba(255, 244, 232, .07); }
+  .index .iy { font-weight: 800; font-stretch: 70%; font-size: 15px; color: var(--ic); font-variant-numeric: tabular-nums; }
+  .index .it { font-size: 13px; line-height: 1.3; }
+  .index .id { display: block; font-size: 11px; color: var(--faint); margin-top: 1px; }
+
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="player" id="player">
+  <div class="sky" aria-hidden="true"></div>
+  <div class="sun" aria-hidden="true"></div>
+  <div class="water" aria-hidden="true"></div>
+
+  <header>
+    <h1>GTA VI: cronología de un fenómeno</h1>
+    <button class="btn index-btn" id="indexBtn" aria-expanded="false" aria-controls="index">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M2.5 4h11M2.5 8h11M2.5 12h11"/></svg>
+      <span id="indexLabel">Índice</span>
+    </button>
+  </header>
+
+  <div class="year" id="year" aria-hidden="true">2013</div>
+
+  <article class="card" id="card" aria-live="polite">
+    <div class="meta"><span class="cat" id="cat"></span><span class="when" id="when"></span></div>
+    <h2 class="title" id="title"></h2>
+    <p class="body" id="body"></p>
+    <div class="foot"><p class="source" id="source"></p><span class="counter" id="counter"></span></div>
+  </article>
+
+  <nav class="nav" aria-label="Navegar la cronología">
+    <button class="btn arrow" id="prev" aria-label="Hito anterior">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3 5 8l5 5"/></svg>
+    </button>
+    <div class="scrub">
+      <div class="track" id="track" role="slider" tabindex="0" aria-label="Hito de la cronología" aria-valuemin="1" aria-valuemax="30" aria-valuenow="1"></div>
+      <div class="years" id="years" aria-hidden="true"></div>
+    </div>
+    <button class="btn arrow" id="next" aria-label="Hito siguiente">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg>
+    </button>
+  </nav>
+
+  <section class="index" id="index" aria-label="Índice de hitos">
+    <div class="legend" id="legend"></div>
+    <ol id="list"></ol>
+  </section>
+</div>
+
+<script>
+(function () {
+  var CATS = {
+    estudio: "Estudio",
+    filtraciones: "Filtraciones",
+    marketing: "Marketing",
+    fechas: "Fechas",
+    negocio: "Negocio",
+    estreno: "Estreno"
+  };
+
+  var H = [
+    { y: "2013", d: "17 de septiembre", c: "negocio",
+      t: "La vara de GTA V: US$ 800 millones en 24 horas",
+      b: "Rockstar lanza Grand Theft Auto V en PS3 y Xbox 360. Take-Two informa ventas por más de US$ 800 millones en su primer día, la marca que su sucesor tendrá que superar trece años después.",
+      s: "Take-Two Interactive" },
+    { y: "2014", d: "Fecha aproximada", c: "estudio",
+      t: "Comienza, en silencio, el siguiente GTA",
+      b: "Según reconstruyó después Bloomberg, Rockstar empezó a trabajar en alguna forma en el nuevo juego apenas un año después de GTA V. Uno de los primeros sistemas que prototipó fue la interacción con los personajes no jugables.",
+      s: "Bloomberg" },
+    { y: "2018", d: "26 de octubre", c: "estudio",
+      t: "Red Dead Redemption 2 libera al estudio",
+      b: "El western de Rockstar recauda más de US$ 725 millones en tres días. Con ese proyecto cerrado, el desarrollo de GTA VI gana intensidad, según relataron más tarde extrabajadores del estudio.",
+      s: "Take-Two Interactive" },
+    { y: "2020", d: "11 de marzo", c: "estudio",
+      t: "Dan Houser deja Rockstar",
+      b: "El cofundador de la compañía y guionista principal de la saga desde GTA III (2001) se marcha tras una larga pausa. Take-Two había adelantado su salida en febrero, en un documento entregado a los reguladores bursátiles.",
+      s: "Take-Two Interactive" },
+    { y: "2022", d: "4 de febrero", c: "estudio",
+      t: "Rockstar confirma que el juego existe",
+      b: "En un anuncio sobre GTA V para PS5 y Xbox Series X|S, el estudio reconoce por primera vez que el desarrollo de la próxima entrega está “muy avanzado”. No hay nombre, fecha ni imágenes.",
+      s: "Rockstar Games" },
+    { y: "2022", d: "27 de julio", c: "estudio",
+      t: "Bloomberg revela una protagonista latina",
+      b: "Jason Schreier reporta que el juego tendrá dos protagonistas inspirados en Bonnie y Clyde, uno de ellos una mujer latina, algo inédito en la saga moderna. El reportaje detalla además un cambio de cultura interna para reducir el crunch.",
+      s: "Bloomberg" },
+    { y: "2022", d: "18 de septiembre", c: "filtraciones",
+      t: "Hackeo masivo: 90 videos del juego en un foro",
+      b: "Un usuario de GTAForums publica 90 clips de una versión de prueba, con Vice City y dos protagonistas. Al día siguiente, Rockstar confirma una “intrusión en la red” y asegura que el desarrollo seguirá según lo planeado.",
+      s: "Rockstar Games" },
+    { y: "2022", d: "22 de septiembre", c: "filtraciones",
+      t: "Detienen a un adolescente en Oxfordshire",
+      b: "La Policía de la City de Londres arresta a un joven de 17 años, miembro del grupo Lapsus$. Más tarde se supo que había entrado a los sistemas de Rockstar desde un hotel, con un Amazon Fire TV Stick, un celular, un teclado y un mouse.",
+      s: "BBC" },
+    { y: "2023", d: "11 de agosto", c: "negocio",
+      t: "Rockstar absorbe a los creadores de FiveM",
+      b: "El estudio suma a Cfx.re, el equipo detrás de FiveM y RedM, las plataformas que sostienen los servidores de rol de GTA V. En 2015, Rockstar había vetado a parte de ese grupo por considerar su mod un servicio no autorizado.",
+      s: "Rockstar Games" },
+    { y: "2023", d: "8 de noviembre", c: "marketing",
+      t: "Sam Houser anuncia el primer tráiler",
+      b: "El cofundador de Rockstar confirma que el adelanto llegará a comienzos de diciembre, en el aniversario 25 del estudio. Es el primer anuncio con fecha desde que se confirmó el proyecto.",
+      s: "Rockstar Games" },
+    { y: "2023", d: "4 de diciembre", c: "marketing",
+      t: "Se filtra el tráiler y Rockstar lo adelanta",
+      b: "Una copia de baja calidad aparece en redes horas antes del estreno y el estudio publica el video de inmediato. Confirma Leonida, el regreso a Vice City, a Lucia como protagonista y el año 2025 para PS5 y Xbox Series X|S.",
+      s: "Rockstar Games" },
+    { y: "2023", d: "Diciembre", c: "marketing",
+      t: "93 millones de vistas en 24 horas",
+      b: "YouTube informa que el tráiler superó los 93 millones de reproducciones en su primer día, récord para un video no musical. Desplazó a MrBeast (59,4 millones). Solo videos musicales, como “Butter” de BTS, lo superan.",
+      s: "YouTube y Guinness World Records" },
+    { y: "2023", d: "21 de diciembre", c: "filtraciones",
+      t: "Internación indefinida para el autor del hackeo",
+      b: "Un tribunal británico ordena internar a Arion Kurtaj, ya de 18 años, en un hospital de seguridad hasta que los médicos lo consideren fuera de peligro. Rockstar estimó en US$ 5 millones el costo del ataque.",
+      s: "BBC" },
+    { y: "2024", d: "28 de febrero", c: "estudio",
+      t: "Vuelta a la oficina, cinco días a la semana",
+      b: "Rockstar pide a sus empleados trabajar presencialmente desde abril, por seguridad y productividad tras las filtraciones. Bloomberg lo lee como señal de que el juego entra en su etapa final. El sindicato IWGB critica la medida.",
+      s: "Bloomberg" },
+    { y: "2024", d: "16 de mayo", c: "fechas",
+      t: "Take-Two acota la ventana: otoño de 2025",
+      b: "Al presentar los resultados de su año fiscal, la matriz de Rockstar precisa que el juego llegará en el otoño boreal de 2025. El “2025” del primer tráiler se convierte en una temporada concreta.",
+      s: "Take-Two Interactive" },
+    { y: "2025", d: "2 de mayo", c: "fechas",
+      t: "Primer retraso: 26 de mayo de 2026",
+      b: "Rockstar posterga el estreno más de medio año y fija por primera vez un día exacto. Explica que necesita más tiempo para entregar la calidad que se espera. Las acciones de Take-Two caen tras el anuncio.",
+      s: "Rockstar Games" },
+    { y: "2025", d: "6 de mayo", c: "marketing",
+      t: "Segundo tráiler: llega Jason Duval",
+      b: "El adelanto presenta al segundo protagonista y estrena un sitio con decenas de imágenes. Rockstar informa 475 millones de vistas en 24 horas, sumando todas las plataformas, y lo llama el mayor lanzamiento de un video.",
+      s: "Rockstar Games vía The Hollywood Reporter" },
+    { y: "2025", d: "30 de octubre", c: "estudio",
+      t: "Despidos y acusación de antisindicalismo",
+      b: "Rockstar despide a 31 trabajadores en Reino Unido y Canadá por compartir información confidencial en un foro. El sindicato IWGB acusa persecución sindical y Take-Two habla de “falta grave”. Hay protestas frente a sus oficinas.",
+      s: "Bloomberg" },
+    { y: "2025", d: "6 de noviembre", c: "fechas",
+      t: "Segundo retraso: 19 de noviembre de 2026",
+      b: "A menos de siete meses de la fecha anterior, Rockstar vuelve a postergar el juego, esta vez medio año. Se disculpa en X y argumenta que el tiempo extra servirá para pulirlo hasta su “máximo potencial”.",
+      s: "Rockstar Games" },
+    { y: "2025", d: "10 de diciembre", c: "estudio",
+      t: "Los despidos llegan al Parlamento británico",
+      b: "Consultado por el diputado laborista Chris Murray, el primer ministro Keir Starmer califica el caso de “profundamente preocupante” y se compromete a revisarlo. Rockstar sostiene que los despidos se debieron a filtraciones.",
+      s: "Cámara de los Comunes" },
+    { y: "2026", d: "21 de mayo", c: "negocio",
+      t: "Take-Two proyecta más de US$ 8.000 millones",
+      b: "Al presentar sus resultados anuales, la compañía ratifica el 19 de noviembre y proyecta más de US$ 8.000 millones en reservas netas para su año fiscal 2027. Strauss Zelnick apunta a GTA VI como el motor de esa cifra.",
+      s: "Take-Two Interactive" },
+    { y: "2026", d: "18 de junio", c: "marketing",
+      t: "Portada oficial tras 408 días de silencio",
+      b: "Sin un tercer tráiler, Rockstar muestra la carátula, con las viñetas clásicas de la saga, y anuncia que las reservas abrirán el 25 de junio. Es su primera novedad oficial desde el segundo tráiler.",
+      s: "Rockstar Games" },
+    { y: "2026", d: "25 de junio", c: "negocio",
+      t: "Abre la preventa: US$ 79,99",
+      b: "La edición estándar cuesta US$ 79,99 y la Ultimate, US$ 99,99, por sobre los US$ 70 habituales de la industria. Solo para PS5 y Xbox Series X|S: Rockstar confirma que la versión de PC llegará más adelante, sin fecha.",
+      s: "Rockstar Games" },
+    { y: "2026", d: "7 de agosto", c: "negocio",
+      t: "Preventas “sin precedentes”",
+      b: "En la llamada con inversionistas, Zelnick describe el nivel de reservas como “sin precedentes y asombroso”, aunque evita dar cifras. GTA V, en tanto, ya supera los 230 millones de copias vendidas.",
+      s: "Take-Two Interactive" },
+    { y: "2026", d: "18 de agosto", c: "filtraciones",
+      t: "Cyberleek filtra gameplay y el mapa",
+      b: "Un grupo anónimo publica clips de una versión en desarrollo y una imagen del mapa completo de Leonida, según dice en protesta contra la distribución digital. Take-Two pide retiros por DMCA y Rockstar califica la filtración de “desgarradora”.",
+      s: "Rockstar Games" },
+    { y: "2026", d: "27 de agosto", c: "marketing",
+      t: "Netflix estrena el primer gameplay oficial",
+      b: "En un acuerdo inédito, Netflix emite durante seis horas en exclusiva “Grand Theft Auto VI: An Extended Look”, 26 minutos capturados en PS5. Luego el video llega a YouTube. Es lo más parecido a un tercer tráiler.",
+      s: "Netflix y Rockstar Games" },
+    { y: "2026", d: "17 de noviembre", c: "estreno",
+      t: "Ocho nominaciones antes de salir a la venta",
+      b: "The Game Awards anuncia sus candidatos y GTA VI lidera con ocho, incluidos Juego del Año y Mejor Actuación para Manni L. Perez, la voz y el rostro de Lucia. Califica por un día: el plazo cerraba el 20 de noviembre.",
+      s: "The Game Awards" },
+    { y: "2026", d: "18 de noviembre", c: "estreno",
+      t: "Un 99 en Metacritic",
+      b: "Al levantarse el embargo de reseñas, el juego promedia 99 con más de 140 críticas, todas positivas. Empata a The Legend of Zelda: Ocarina of Time (1998) como el título mejor evaluado en la historia del sitio.",
+      s: "Metacritic" },
+    { y: "2026", d: "19 de noviembre", c: "estreno",
+      t: "GTA VI llega a las consolas",
+      b: "Trece años y dos meses después de GTA V, el juego se lanza en PS5 y Xbox Series X|S, con un despliegue a medianoche según la zona horaria de cada país. La versión de PC sigue sin fecha anunciada.",
+      s: "Rockstar Games" },
+    { y: "2026", d: "19 de noviembre", c: "negocio",
+      t: "US$ 1.840 millones al día del estreno",
+      b: "La consultora Sensor Tower estima 19 millones de copias vendidas al día del lanzamiento, más del doble de lo que facturó GTA V en su primer día. Un 75% corresponde a PlayStation. Take-Two aún no entrega cifras oficiales.",
+      s: "Sensor Tower vía Forbes" }
+  ];
+
+  // Cielo: de la noche (2013) al amanecer (2026)
+  var SKY = [
+    [0.00, ["#0b0a24", "#1b1650", "#2e2368"]],
+    [0.45, ["#140e38", "#3b1a62", "#7a2a72"]],
+    [0.75, ["#1d0f45", "#6e2068", "#c23a6c"]],
+    [1.00, ["#2a1052", "#a42a6a", "#f27a3e"]]
+  ];
+
+  var $ = function (id) { return document.getElementById(id); };
+  var player = $("player"), card = $("card"), track = $("track");
+  var yearEl = $("year"), indexEl = $("index"), indexBtn = $("indexBtn");
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var N = H.length, cur = -1;
+
+  function hex(h) { return [1, 3, 5].map(function (i) { return parseInt(h.substr(i, 2), 16); }); }
+  function mix(a, b, t) {
+    var A = hex(a), B = hex(b);
+    return "rgb(" + A.map(function (v, i) { return Math.round(v + (B[i] - v) * t); }).join(",") + ")";
+  }
+  function skyAt(p) {
+    for (var i = 1; i < SKY.length; i++) {
+      if (p <= SKY[i][0]) {
+        var a = SKY[i - 1], b = SKY[i], t = (p - a[0]) / (b[0] - a[0]);
+        return a[1].map(function (c, k) { return mix(c, b[1][k], t); });
+      }
+    }
+    return SKY[SKY.length - 1][1];
+  }
+  function catColor(c) { return "var(--c-" + c + ")"; }
+
+  // Marcas del deslizador
+  H.forEach(function (h, i) {
+    var t = document.createElement("span");
+    t.className = "tick";
+    t.style.setProperty("--tc", catColor(h.c));
+    t.appendChild(document.createElement("i"));
+    track.appendChild(t);
+  });
+  var ticks = track.children;
+
+  // Etiquetas de año bajo el deslizador (primer hito de cada año, sin choques)
+  var labels = { "2013": 1, "2018": 1, "2022": 1, "2023": 1, "2024": 1, "2025": 1, "2026": 1 };
+  var seen = {};
+  H.forEach(function (h, i) {
+    if (labels[h.y] && !seen[h.y]) {
+      seen[h.y] = 1;
+      var s = document.createElement("span");
+      s.textContent = "’" + h.y.slice(2);
+      s.style.left = ((i + 0.5) / N * 100) + "%";
+      $("years").appendChild(s);
+    }
+  });
+
+  // Leyenda e índice
+  Object.keys(CATS).forEach(function (k) {
+    var s = document.createElement("span");
+    s.textContent = CATS[k];
+    s.style.setProperty("--lc", catColor(k));
+    $("legend").appendChild(s);
+  });
+  H.forEach(function (h, i) {
+    var li = document.createElement("li"), b = document.createElement("button");
+    b.type = "button";
+    b.style.setProperty("--ic", catColor(h.c));
+    b.innerHTML = '<span class="iy"></span><span class="it"></span>';
+    b.querySelector(".iy").textContent = h.y;
+    b.querySelector(".it").textContent = h.t;
+    var dd = document.createElement("span");
+    dd.className = "id";
+    dd.textContent = h.d;
+    b.querySelector(".it").appendChild(dd);
+    b.addEventListener("click", function () { go(i); toggleIndex(false); });
+    li.appendChild(b);
+    $("list").appendChild(li);
+  });
+  var listButtons = $("list").querySelectorAll("button");
+
+  function go(i, fromDrag) {
+    i = Math.max(0, Math.min(N - 1, i));
+    if (i === cur) return;
+    var dir = cur < 0 ? 0 : (i > cur ? 1 : -1);
+    var prevYear = cur < 0 ? null : H[cur].y;
+    cur = i;
+    var h = H[i];
+
+    $("cat").textContent = CATS[h.c];
+    $("when").textContent = h.d;
+    $("title").textContent = h.t;
+    $("body").textContent = h.b;
+    $("body").scrollTop = 0;
+    $("source").textContent = "Fuente: " + h.s;
+    card.style.setProperty("--cat", catColor(h.c));
+    yearEl.textContent = h.y;
+
+    // Cielo y sol
+    var p = i / (N - 1), sky = skyAt(p);
+    player.style.setProperty("--sky-top", sky[0]);
+    player.style.setProperty("--sky-mid", sky[1]);
+    player.style.setProperty("--sky-low", sky[2]);
+    player.style.setProperty("--sun-y", Math.round(46 - p * 52) + "px");
+
+    // Deslizador
+    for (var k = 0; k < N; k++) {
+      ticks[k].classList.toggle("on", k === i);
+      ticks[k].classList.toggle("future", k > i);
+    }
+    track.setAttribute("aria-valuenow", i + 1);
+    track.setAttribute("aria-valuetext", "Hito " + (i + 1) + " de " + N + ": " + h.d + " " + h.y + ", " + h.t);
+    $("prev").disabled = i === 0;
+    $("next").disabled = i === N - 1;
+    listButtons.forEach(function (b, k) { b.setAttribute("aria-current", k === i ? "true" : "false"); });
+    $("counter").textContent = (i + 1) + " / " + N;
+
+    if (!reduce && dir !== 0 && card.animate) {
+      card.animate(
+        [{ opacity: 0, transform: "translateX(" + (dir * 14) + "px)" }, { opacity: 1, transform: "none" }],
+        { duration: fromDrag ? 160 : 260, easing: "cubic-bezier(.2,.7,.2,1)" }
+      );
+      if (prevYear !== h.y && yearEl.animate) {
+        yearEl.animate(
+          [{ opacity: 0, transform: "translateY(10px)" }, { opacity: 1, transform: "none" }],
+          { duration: 360, easing: "cubic-bezier(.2,.7,.2,1)" }
+        );
+      }
+    }
+  }
+
+  // Botones
+  $("prev").addEventListener("click", function () { go(cur - 1); });
+  $("next").addEventListener("click", function () { go(cur + 1); });
+
+  // Arrastre sobre el deslizador
+  function idxFromX(x) {
+    var r = track.getBoundingClientRect();
+    return Math.floor(Math.max(0, Math.min(.9999, (x - r.left) / r.width)) * N);
+  }
+  var dragging = false;
+  track.addEventListener("pointerdown", function (e) {
+    dragging = true;
+    track.setPointerCapture(e.pointerId);
+    go(idxFromX(e.clientX), true);
+  });
+  track.addEventListener("pointermove", function (e) { if (dragging) go(idxFromX(e.clientX), true); });
+  ["pointerup", "pointercancel"].forEach(function (ev) {
+    track.addEventListener(ev, function () { dragging = false; });
+  });
+
+  // Deslizar con el dedo sobre la tarjeta
+  var sx = null, sy = null;
+  card.addEventListener("pointerdown", function (e) { sx = e.clientX; sy = e.clientY; });
+  card.addEventListener("pointerup", function (e) {
+    if (sx === null) return;
+    var dx = e.clientX - sx, dy = e.clientY - sy;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) go(cur + (dx < 0 ? 1 : -1));
+    sx = sy = null;
+  });
+
+  // Teclado
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && indexEl.classList.contains("open")) { toggleIndex(false); indexBtn.focus(); return; }
+    if (indexEl.classList.contains("open")) return;
+    if (e.key === "ArrowRight") { go(cur + 1); e.preventDefault(); }
+    else if (e.key === "ArrowLeft") { go(cur - 1); e.preventDefault(); }
+    else if (e.key === "Home") { go(0); e.preventDefault(); }
+    else if (e.key === "End") { go(N - 1); e.preventDefault(); }
+  });
+
+  // Índice
+  function toggleIndex(open) {
+    if (typeof open !== "boolean") open = !indexEl.classList.contains("open");
+    indexEl.classList.toggle("open", open);
+    indexBtn.setAttribute("aria-expanded", open ? "true" : "false");
+    $("indexLabel").textContent = open ? "Cerrar" : "Índice";
+    if (open) {
+      var b = listButtons[cur];
+      var ol = $("list");
+      ol.scrollTop = Math.max(0, b.parentNode.offsetTop - ol.clientHeight / 2 + b.offsetHeight / 2);
+      setTimeout(function () { b.focus({ preventScroll: true }); }, 30);
+    }
+  }
+  indexBtn.addEventListener("click", function () { toggleIndex(); });
+
+  go(0);
+})();
+</script>
+</body>
+</html>
